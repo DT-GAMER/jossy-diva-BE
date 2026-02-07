@@ -1,14 +1,159 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(ADMIN)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+}
+
+
+model Product {
+  id                String   @id @default(uuid())
+  name              String
+  description       String
+  category          ProductCategory
+
+  costPrice         Int
+  sellingPrice      Int
+
+  discountType      DiscountType?
+  discountValue     Int?
+
+  quantity          Int
+  reservedQuantity  Int      @default(0)
+
+  visibleOnWebsite  Boolean  @default(false)
+
+  media             ProductMedia[]
+  orderItems        OrderItem[]
+  sales             SaleItem[]
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+
+model ProductMedia {
+  id        String    @id @default(uuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String
+
+  url       String
+  type      MediaType
+
+  createdAt DateTime  @default(now())
+}
+
+
+model Order {
+  id          String      @id @default(uuid())
+  orderNumber String      @unique
+
+  customerName String
+  phone        String
+
+  totalAmount  Int
+  status       OrderStatus @default(PENDING_PAYMENT)
+  source       SaleSource  @default(WEBSITE)
+
+  items        OrderItem[]
+
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String
+
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  String
+
+  quantity   Int
+  priceAtOrder Int
+}
+
+
+model Sale {
+  id            String      @id @default(uuid())
+  source        SaleSource
+  orderNumber   String?
+
+  totalAmount   Int
+  profit        Int
+  paymentMethod PaymentMethod
+
+  items         SaleItem[]
+
+  createdAt     DateTime    @default(now())
+}
+
+
+model SaleItem {
+  id         String   @id @default(uuid())
+  sale       Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId     String
+
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  String
+
+  quantity   Int
+  sellingPrice Int
+  costPrice    Int
+}
+
+
+enum ProductCategory {
+  CLOTHES
+  SHOES
+  PERFUMES
+  CREAMS
+  WATCHES
+  JEWELRY
+  BAGS
+  BODY_SPRAY
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  COMPLETED
+  CANCELLED
+}
+
+enum SaleSource {
+  WALK_IN
+  WEBSITE
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
 }
