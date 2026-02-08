@@ -14,11 +14,17 @@ export class MediaService {
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    cloudinary.config({
-      cloud_name: this.configService.get('cloudinary.cloudName'),
-      api_key: this.configService.get('cloudinary.apiKey'),
-      api_secret: this.configService.get('cloudinary.apiSecret'),
-    });
+    const cloudinaryUrl = this.configService.get<string>(
+      'cloudinary.cloudUrl',
+    );
+
+    if (!cloudinaryUrl) {
+      throw new Error('CLOUDINARY_URL is not configured');
+    }
+
+    // Cloudinary SDK parses credentials from process.env.CLOUDINARY_URL
+    process.env.CLOUDINARY_URL = cloudinaryUrl;
+    cloudinary.config(true);
   }
 
   async uploadProductMedia(
