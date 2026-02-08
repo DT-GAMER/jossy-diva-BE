@@ -1,6 +1,10 @@
 // src/products/products.service.ts
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FilterProductsDto } from './dto/filter-products.dto';
@@ -10,13 +14,27 @@ import {
   ProductCategory,
   PRODUCT_CATEGORIES,
 } from '../common/constants/categories.constant';
+import { MediaService } from '../media/media.service';
+import type { UploadedMediaFile } from '../media/types/uploaded-media-file.type';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mediaService: MediaService,
+  ) {}
 
-  async create(dto: CreateProductDto) {
-    return this.prisma.product.create({
+  async create(
+    dto: CreateProductDto,
+    files: UploadedMediaFile[] = [],
+  ) {
+    if (files.length > 2) {
+      throw new BadRequestException(
+        'Maximum of 2 media files allowed per product',
+      );
+    }
+
+    const product = await this.prisma.product.create({
       data: {
         name: dto.name,
         description: dto.description,
@@ -27,6 +45,27 @@ export class ProductsService {
         discountValue: dto.discountValue,
         quantity: dto.quantity,
         visibleOnWebsite: dto.visibleOnWebsite,
+      },
+      include: {
+        media: true,
+      },
+    });
+
+    if (!files.length) {
+      return product;
+    }
+
+    for (const file of files) {
+      await this.mediaService.uploadProductMedia(
+        product.id,
+        file,
+      );
+    }
+
+    return this.prisma.product.findUnique({
+      where: { id: product.id },
+      include: {
+        media: true,
       },
     });
   }
@@ -72,10 +111,20 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: string, dto: UpdateProductDto) {
-    await this.findOne(id);
+  async update(
+    id: string,
+    dto: UpdateProductDto,
+    files: UploadedMediaFile[] = [],
+  ) {
+    const existingProduct = await this.findOne(id);
 
-    return this.prisma.product.update({
+    if (existingProduct.media.length + files.length > 2) {
+      throw new BadRequestException(
+        'Maximum of 2 media files allowed per product',
+      );
+    }
+
+    await this.prisma.product.update({
       where: { id },
       data: {
         ...dto,
@@ -83,6 +132,15 @@ export class ProductsService {
           ? (dto.discountType.toUpperCase() as any)
           : undefined,
       },
+    });
+
+    for (const file of files) {
+      await this.mediaService.uploadProductMedia(id, file);
+    }
+
+    return this.prisma.product.findUnique({
+      where: { id },
+      include: { media: true },
     });
   }
 

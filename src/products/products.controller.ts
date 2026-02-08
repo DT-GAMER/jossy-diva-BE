@@ -10,15 +10,21 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiExtraModels,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiQuery,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -26,12 +32,14 @@ import { FilterProductsDto } from './dto/filter-products.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductResponseDto } from './dto/product-response.dto';
 import { ProductCategory } from '../common/constants/categories.constant';
+import type { UploadedMediaFile } from '../media/types/uploaded-media-file.type';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminOnly } from '../common/decorators/admin-only.decorator';
 
 @ApiTags('Products')
 @ApiBearerAuth('JWT-auth')
+@ApiExtraModels(CreateProductDto, UpdateProductDto)
 @Controller({ path: 'products', version: '1' })
 @UseGuards(JwtAuthGuard)
 @AdminOnly()
@@ -39,10 +47,35 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @ApiBody({ type: CreateProductDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(CreateProductDto) },
+        {
+          type: 'object',
+          properties: {
+            files: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'binary',
+              },
+              description:
+                'Optional product media files (max 2)',
+            },
+          },
+        },
+      ],
+    },
+  })
   @ApiCreatedResponse({ type: ProductResponseDto })
-  create(@Body() dto: CreateProductDto) {
-    return this.productsService.create(dto);
+  @UseInterceptors(FilesInterceptor('files', 2))
+  create(
+    @Body() dto: CreateProductDto,
+    @UploadedFiles() files?: UploadedMediaFile[],
+  ) {
+    return this.productsService.create(dto, files ?? []);
   }
 
   @Get()
@@ -80,10 +113,36 @@ export class ProductsController {
   }
 
   @Put(':id')
-  @ApiBody({ type: UpdateProductDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(UpdateProductDto) },
+        {
+          type: 'object',
+          properties: {
+            files: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'binary',
+              },
+              description:
+                'Optional new media files to add (max 2 total per product)',
+            },
+          },
+        },
+      ],
+    },
+  })
   @ApiOkResponse({ type: ProductResponseDto })
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.productsService.update(id, dto);
+  @UseInterceptors(FilesInterceptor('files', 2))
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+    @UploadedFiles() files?: UploadedMediaFile[],
+  ) {
+    return this.productsService.update(id, dto, files ?? []);
   }
 
   @Delete(':id')

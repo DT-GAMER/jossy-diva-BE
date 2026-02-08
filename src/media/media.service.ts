@@ -52,14 +52,45 @@ export class MediaService {
       throw new BadRequestException('No media file provided');
     }
 
-    // Upload to Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(
-      file.path,
-      {
-        resource_type: 'auto', // image or video
-        folder: 'jossy-diva/products',
-      },
-    );
+    const uploadOptions = {
+      resource_type: 'auto' as const, // image or video
+      folder: 'jossy-diva/products',
+    };
+
+    let uploadResult: {
+      resource_type: string;
+      secure_url: string;
+    };
+
+    // Support both disk storage (path) and memory storage (buffer)
+    if (file.path) {
+      uploadResult = await cloudinary.uploader.upload(
+        file.path,
+        uploadOptions,
+      );
+    } else if (file.buffer) {
+      uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          uploadOptions,
+          (error, result) => {
+            if (error || !result) {
+              reject(
+                error ??
+                  new Error('Cloudinary upload failed'),
+              );
+              return;
+            }
+            resolve(result);
+          },
+        );
+
+        stream.end(file.buffer);
+      });
+    } else {
+      throw new BadRequestException(
+        'Invalid media file payload',
+      );
+    }
 
     const mediaType =
       uploadResult.resource_type === 'video'
