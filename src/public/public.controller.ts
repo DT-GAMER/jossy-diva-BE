@@ -1,12 +1,14 @@
 // src/public/public.controller.ts
 
 import { Controller, Get, Post, Body, Query } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Version } from '@nestjs/common';
 
 import { PublicService } from './public.service';
 import { CreateOrderDto } from '../orders/dto/create-order.dto';
 import { FilterPublicProductsDto } from './dto/filter-public-products.dto';
+import { ProductCategory } from '../common/constants/categories.constant';
+import { PublicProductResponseDto } from './dto/public-product-response.dto';
 
 @ApiTags('Public')
 @Controller({ path: 'public', version: '1' })
@@ -24,8 +26,12 @@ export class PublicController {
   })
   @ApiQuery({
     name: 'category',
+    enum: ProductCategory,
     required: false,
-    example: 'SHOES',
+  })
+  @ApiOkResponse({
+    type: PublicProductResponseDto,
+    isArray: true,
   })
   getProducts(@Query() query: FilterPublicProductsDto) {
     return this.publicService.getProducts(query);
