@@ -13,6 +13,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const configService = app.get(ConfigService);
+  const port = configService.get<number>('port') ?? 3000;
   app.enableShutdownHooks();
 
   /**
@@ -96,6 +97,14 @@ async function bootstrap() {
       'Backend API for inventory, sales, and website orders',
     )
     .setVersion('1.0')
+    .addServer(
+      `http://localhost:${port}`,
+      'Local development',
+    )
+    .addServer(
+      'https://magic.myradture.com',
+      'Production',
+    )
     .addBearerAuth(
       {
         type: 'http',
@@ -104,17 +113,23 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
+    .addSecurityRequirements('JWT-auth')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      tryItOutEnabled: true,
+    },
+  });
 
   /**
    * ------------------------------------------------------
    * START SERVER
    * ------------------------------------------------------
    */
-  const port = configService.get<number>('port') ?? 3000;
   await app.listen(port);
 
   console.log(`🚀 Server running on http://localhost:${port}`);
