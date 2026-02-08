@@ -1,9 +1,13 @@
+// src/public/public.module.ts
+
 import { Module } from '@nestjs/common';
-import { PublicController } from './public.controller';
 import { PublicService } from './public.service';
+import { PublicController } from './public.controller';
+import { OrdersModule } from '../orders/orders.module';
 
 @Module({
+  imports: [OrdersModule],
   controllers: [PublicController],
-  providers: [PublicService]
+  providers: [PublicService],
 })
 export class PublicModule {}

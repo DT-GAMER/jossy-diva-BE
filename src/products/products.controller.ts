@@ -47,13 +47,18 @@ export class ProductsController {
 
   @Get()
   @ApiQuery({
+    name: 'search',
+    required: false,
+    example: 's',
+  })
+  @ApiQuery({
     name: 'category',
     enum: ProductCategory,
     required: false,
   })
   @ApiOkResponse({ type: ProductResponseDto, isArray: true })
   findAll(@Query() query: FilterProductsDto) {
-    return this.productsService.findAll(query.category);
+    return this.productsService.findAll(query);
   }
 
   @Get('categories')

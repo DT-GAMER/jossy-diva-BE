@@ -51,7 +51,7 @@ export class OrdersController {
   @Get()
   @ApiOkResponse({ type: OrderResponseDto, isArray: true })
   findAll(@Query() query: FilterOrdersDto) {
-    return this.ordersService.findAll(query.status);
+    return this.ordersService.findAll(query);
   }
 
   /**

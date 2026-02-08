@@ -1,4 +1,4 @@
 export enum SaleSource {
-  WALK_IN = 'walk_in',
-  WEBSITE = 'website',
+  WALK_IN = 'WALK_IN',
+  WEBSITE = 'WEBSITE',
 }

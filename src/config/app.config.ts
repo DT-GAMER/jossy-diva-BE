@@ -3,7 +3,7 @@ export default () => ({
   port: parseInt(process.env.PORT ?? '3000', 10),
 
   orderExpiryHours: parseInt(
-    process.env.ORDER_EXPIRY_HOURS ?? '12',
+    process.env.ORDER_EXPIRY_HOURS ?? '24',
     10,
   ),
 });

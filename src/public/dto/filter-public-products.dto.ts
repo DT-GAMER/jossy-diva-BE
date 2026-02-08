@@ -2,10 +2,11 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ProductCategory } from '../../common/constants/categories.constant';
 
-export class FilterProductsDto {
+export class FilterPublicProductsDto {
   @ApiPropertyOptional({
-    example: 's',
-    description: 'Search by product name (case-insensitive, partial match)',
+    example: 'black shoe',
+    description:
+      'Smart search by product name/description (case-insensitive, multi-word)',
   })
   @IsOptional()
   @IsString()

@@ -1,9 +1,15 @@
+// src/jobs/jobs.module.ts
+
 import { Module } from '@nestjs/common';
-import { JobsController } from './jobs.controller';
-import { JobsService } from './jobs.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { OrderCleanupJob } from './order-cleanup.jobs';
+import { InventoryModule } from '../inventory/inventory.module';
 
 @Module({
-  controllers: [JobsController],
-  providers: [JobsService]
+  imports: [
+    ScheduleModule.forRoot(),
+    InventoryModule,
+  ],
+  providers: [OrderCleanupJob],
 })
 export class JobsModule {}

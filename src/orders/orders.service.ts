@@ -5,13 +5,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { PaymentMethod, SaleSource, type Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { FilterOrdersDto } from './dto/filter-orders.dto';
 import { OrderStatus } from '../common/constants/order-status.constant';
 import { OrderNumberUtil } from '../common/utils/order-number.util';
 import { DateUtil } from '../common/utils/date.util';
+import { PriceUtil } from 'src/common/utils/price.util';
 
 @Injectable()
 export class OrdersService {
@@ -103,9 +105,52 @@ export class OrdersService {
   /**
    * Get all orders (admin)
    */
-  async findAll(status?: OrderStatus) {
+  async findAll(filters: FilterOrdersDto) {
+    const where: Prisma.OrderWhereInput = {};
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        {
+          orderNumber: {
+            contains: filters.search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          customerName: {
+            contains: filters.search,
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
+
+    if (filters.startDate || filters.endDate) {
+      const startDate = filters.startDate
+        ? DateUtil.startOfDay(new Date(filters.startDate))
+        : undefined;
+      const endDate = filters.endDate
+        ? DateUtil.endOfDay(new Date(filters.endDate))
+        : undefined;
+
+      if (startDate && endDate && startDate > endDate) {
+        throw new BadRequestException(
+          'startDate cannot be later than endDate',
+        );
+      }
+
+      where.createdAt = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
+
     return this.prisma.order.findMany({
-      where: status ? { status } : undefined,
+      where,
       include: {
         items: true,
       },
@@ -135,31 +180,99 @@ export class OrdersService {
    * Update order status
    */
   async updateStatus(orderId: string, status: OrderStatus) {
-    const order = await this.prisma.order.findUnique({
-      where: { id: orderId },
-      include: { items: true },
-    });
+  const order = await this.prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: true,
+    },
+  });
 
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
+  if (!order) {
+    throw new NotFoundException('Order not found');
+  }
 
-    // Handle cancellation → release stock
-    if (
-      status === OrderStatus.CANCELLED &&
-      order.status === OrderStatus.PENDING_PAYMENT
-    ) {
-      for (const item of order.items) {
-        await this.inventoryService.releaseReservedStock(
-          item.productId,
-          item.quantity,
-        );
-      }
+  // 🚫 Prevent invalid transitions
+  if (order.status !== OrderStatus.PENDING_PAYMENT) {
+    throw new BadRequestException(
+      'Only pending orders can be updated',
+    );
+  }
+
+  // ❌ CANCELLED → release stock
+  if (status === OrderStatus.CANCELLED) {
+    for (const item of order.items) {
+      await this.inventoryService.releaseReservedStock(
+        item.productId,
+        item.quantity,
+      );
     }
 
     return this.prisma.order.update({
       where: { id: orderId },
-      data: { status },
+      data: { status: OrderStatus.CANCELLED },
     });
   }
+
+  // PAID → AUTO CREATE SALE
+  if (status === OrderStatus.PAID) {
+    let totalAmount = 0;
+    let totalProfit = 0;
+
+    const saleItems: Prisma.SaleItemUncheckedCreateWithoutSaleInput[] = [];
+
+    for (const item of order.items) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: item.productId },
+      });
+
+      if (!product) {
+        throw new NotFoundException('Product not found');
+      }
+
+      // Finalize reserved stock
+      await this.inventoryService.finalizeReservedStock(
+        product.id,
+        item.quantity,
+      );
+
+      const profit = PriceUtil.calculateProfit(
+        product.costPrice,
+        item.priceAtOrder,
+        item.quantity,
+      );
+
+      totalAmount += item.priceAtOrder * item.quantity;
+      totalProfit += profit;
+
+      saleItems.push({
+        productId: product.id,
+        quantity: item.quantity,
+        sellingPrice: item.priceAtOrder,
+        costPrice: product.costPrice,
+      });
+    }
+
+    // Create sale automatically
+    await this.prisma.sale.create({
+      data: {
+        source: SaleSource.WEBSITE,
+        orderNumber: order.orderNumber,
+        totalAmount,
+        profit: totalProfit,
+        paymentMethod: PaymentMethod.TRANSFER,
+        items: {
+          create: saleItems,
+        },
+      },
+    });
+
+    // Mark order completed
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: OrderStatus.COMPLETED },
+    });
+  }
+
+  throw new BadRequestException('Invalid order status');
+}
 }
