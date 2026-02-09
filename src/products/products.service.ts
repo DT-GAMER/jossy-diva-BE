@@ -25,50 +25,66 @@ export class ProductsService {
   ) {}
 
   async create(
-    dto: CreateProductDto,
-    files: UploadedMediaFile[] = [],
-  ) {
-    if (files.length > 2) {
-      throw new BadRequestException(
-        'Maximum of 2 media files allowed per product',
-      );
-    }
+  dto: CreateProductDto,
+  files: UploadedMediaFile[] = [],
+) {
+  // 🛑 Filter out empty file placeholders (safety)
+  const validFiles = files.filter(
+    (f) => f && f.originalname,
+  );
 
-    const product = await this.prisma.product.create({
-      data: {
-        name: dto.name,
-        description: dto.description,
-        category: dto.category,
-        costPrice: dto.costPrice,
-        sellingPrice: dto.sellingPrice,
-        discountType: dto.discountType?.toUpperCase() as any,
-        discountValue: dto.discountValue,
-        quantity: dto.quantity,
-        visibleOnWebsite: dto.visibleOnWebsite,
-      },
-      include: {
-        media: true,
-      },
-    });
-
-    if (!files.length) {
-      return product;
-    }
-
-    for (const file of files) {
-      await this.mediaService.uploadProductMedia(
-        product.id,
-        file,
-      );
-    }
-
-    return this.prisma.product.findUnique({
-      where: { id: product.id },
-      include: {
-        media: true,
-      },
-    });
+  if (validFiles.length > 2) {
+    throw new BadRequestException(
+      'Maximum of 2 media files allowed per product',
+    );
   }
+
+  // 🛑 Enforce discount consistency (final safety net)
+  const hasDiscountType = dto.discountType !== undefined;
+  const hasDiscountValue = dto.discountValue !== undefined;
+
+  if (hasDiscountType !== hasDiscountValue) {
+    throw new BadRequestException(
+      'Both discountType and discountValue must be provided together',
+    );
+  }
+
+  const product = await this.prisma.product.create({
+    data: {
+      name: dto.name,
+      description: dto.description,
+      category: dto.category,
+      costPrice: dto.costPrice,
+      sellingPrice: dto.sellingPrice,
+      discountType: dto.discountType, // ✅ trust DTO
+      discountValue: dto.discountValue,
+      quantity: dto.quantity,
+      visibleOnWebsite: dto.visibleOnWebsite,
+    },
+    include: {
+      media: true,
+    },
+  });
+
+  if (!validFiles.length) {
+    return product;
+  }
+
+  for (const file of validFiles) {
+    await this.mediaService.uploadProductMedia(
+      product.id,
+      file,
+    );
+  }
+
+  return this.prisma.product.findUnique({
+    where: { id: product.id },
+    include: {
+      media: true,
+    },
+  });
+}
+
 
   async findAll(filters: FilterProductsDto) {
     const where = {
