@@ -9,7 +9,7 @@ interface ReceiptItem {
   total: number;
 }
 
-interface ReceiptData {
+export interface ReceiptData {
   receiptNumber: string;
   date: string;
   paymentMethod: string;
@@ -20,11 +20,9 @@ interface ReceiptData {
 const BRAND_BLUE = '#0F172A';
 const BRAND_GOLD = '#D4AF37';
 
-const LOGO_URL =
-  'https://res.cloudinary.com/dofiyn7bw/image/upload/v1770621010/Gemini_Generated_Image_sebyzqsebyzqseby-removebg-preview_viygn2.png';
-
 export function generateReceiptPDF(
   data: ReceiptData,
+  logoBuffer: Buffer,
 ): PDFDocument {
   const doc = new PDFDocument({
     size: 'A4',
@@ -35,7 +33,8 @@ export function generateReceiptPDF(
 
   doc.rect(0, 0, doc.page.width, 120).fill(BRAND_BLUE);
 
-  doc.image(LOGO_URL, 40, 20, { width: 70 });
+  // LOGO (BUFFER)
+  doc.image(logoBuffer, 40, 20, { width: 70 });
 
   doc
     .fillColor('#FFFFFF')
@@ -75,9 +74,8 @@ export function generateReceiptPDF(
   doc.save();
   doc.opacity(0.06);
 
-  doc.image(LOGO_URL, centerX - 150, centerY - 150, {
+  doc.image(logoBuffer, centerX - 150, centerY - 150, {
     width: 300,
-    align: 'center',
   });
 
   doc.restore();
@@ -109,9 +107,7 @@ export function generateReceiptPDF(
 
   const tableTop = doc.y + 10;
 
-  doc
-    .rect(40, tableTop - 5, 520, 22)
-    .fill('#F1F5F9');
+  doc.rect(40, tableTop - 5, 520, 22).fill('#F1F5F9');
 
   doc
     .fillColor(BRAND_BLUE)
@@ -131,16 +127,8 @@ export function generateReceiptPDF(
       .fontSize(11)
       .text(item.name, 45, y, { width: 240 })
       .text(String(item.quantity), 300, y)
-      .text(
-        `₦${item.unitPrice.toLocaleString()}`,
-        350,
-        y,
-      )
-      .text(
-        `₦${item.total.toLocaleString()}`,
-        470,
-        y,
-      );
+      .text(`₦${item.unitPrice.toLocaleString()}`, 350, y)
+      .text(`₦${item.total.toLocaleString()}`, 470, y);
 
     y += 22;
   }
