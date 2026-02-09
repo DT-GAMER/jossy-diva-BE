@@ -24,6 +24,8 @@ const TEXT_GRAY = '#475569';
 export function generateReceiptPDF(
   data: ReceiptData,
   logoBuffer: Buffer,
+  phoneIcon: Buffer,
+  instagramIcon: Buffer,
 ): PDFDocument {
   const doc = new PDFDocument({
     size: 'A4',
@@ -36,8 +38,13 @@ export function generateReceiptPDF(
 
   doc.rect(0, 0, doc.page.width, 120).fill(BRAND_BLUE);
 
-  // Logo
-  doc.image(logoBuffer, 40, 22, { width: 70 });
+  // Gold badge behind logo (contrast fix)
+  doc
+    .circle(65, 60, 28)
+    .fill(BRAND_GOLD);
+
+  // Bigger logo
+  doc.image(logoBuffer, 40, 30, { width: 50 });
 
   doc
     .fillColor('#FFFFFF')
@@ -54,29 +61,38 @@ export function generateReceiptPDF(
     .fontSize(9)
     .text('NO 10, Dalemo Road, Alakuko, Lagos State', 120, 68);
 
+  // Icons row (NO EMOJIS)
+  const iconY = 86;
+
+  doc.image(phoneIcon, 120, iconY, { width: 10 });
   doc
+    .fillColor('#FFFFFF')
     .fontSize(9)
-    .text('📞 0904 926 4366   |   📸 @jossydiva_collection', 120, 85);
+    .text('0904 926 4366', 135, iconY - 2);
+
+  doc.image(instagramIcon, 220, iconY, { width: 10 });
+  doc
+    .text('@jossydiva_collection', 235, iconY - 2);
 
   doc.moveDown(5);
   doc.fillColor('#000000');
 
   /* =====================================================
-     WATERMARK (VISIBLE BUT SUBTLE)
+     WATERMARK (MORE VISIBLE)
   ===================================================== */
 
   const centerX = doc.page.width / 2;
   const centerY = doc.page.height / 2 + 40;
 
   doc.save();
-  doc.opacity(0.12); // 👈 tuned for visibility
-  doc.image(logoBuffer, centerX - 140, centerY - 140, {
-    width: 280,
+  doc.opacity(0.18); // 👈 stronger but elegant
+  doc.image(logoBuffer, centerX - 160, centerY - 160, {
+    width: 320,
   });
   doc.restore();
 
   /* =====================================================
-     RECEIPT META (ALIGNED GRID)
+     RECEIPT META
   ===================================================== */
 
   const metaStartY = doc.y;
@@ -97,18 +113,16 @@ export function generateReceiptPDF(
   doc.moveDown(3);
 
   /* =====================================================
-     ITEMS TABLE
+     ITEMS TABLE (UNCHANGED, ALREADY GOOD)
   ===================================================== */
 
   const tableTop = doc.y + 10;
 
-  // Column grid
   const colItemX = 45;
   const colQtyX = 320;
   const colUnitX = 380;
   const colTotalX = 480;
 
-  // Header background
   doc.rect(40, tableTop - 6, 520, 24).fill('#F1F5F9');
 
   doc
@@ -128,10 +142,7 @@ export function generateReceiptPDF(
     doc
       .fontSize(11)
       .text(item.name, colItemX, y, { width: 250 })
-      .text(String(item.quantity), colQtyX, y, {
-        width: 40,
-        align: 'right',
-      })
+      .text(String(item.quantity), colQtyX, y, { width: 40, align: 'right' })
       .text(`₦${item.unitPrice.toLocaleString()}`, colUnitX, y, {
         width: 70,
         align: 'right',
@@ -160,10 +171,7 @@ export function generateReceiptPDF(
     .font('Helvetica-Bold')
     .fontSize(13)
     .fillColor(BRAND_BLUE)
-    .text('TOTAL', colUnitX, totalY, {
-      width: 70,
-      align: 'right',
-    });
+    .text('TOTAL', colUnitX, totalY, { width: 70, align: 'right' });
 
   doc
     .fontSize(15)
@@ -173,8 +181,6 @@ export function generateReceiptPDF(
       align: 'right',
     });
 
-  doc.fillColor('#000000').font('Helvetica');
-
   /* =====================================================
      FOOTER
   ===================================================== */
@@ -183,7 +189,8 @@ export function generateReceiptPDF(
 
   doc
     .fontSize(11)
-    .text('Thank you for shopping with Jossy-Diva 💙', 0, footerY, {
+    .fillColor('#000000')
+    .text('Thank you for shopping with Jossy-Diva', 0, footerY, {
       align: 'center',
     });
 

@@ -6,16 +6,34 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { generateReceiptPDF } from './templates/reciept.template';
-import { DateUtil } from '../common/utils/date.util';
 
 const LOGO_URL =
   'https://res.cloudinary.com/dofiyn7bw/image/upload/v1770621010/Gemini_Generated_Image_sebyzqsebyzqseby-removebg-preview_viygn2.png';
+const PHONE_ICON_URL =
+  'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/260e.png';
+const INSTAGRAM_ICON_URL =
+  'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4f7.png';
+
+const TRANSPARENT_PNG_1X1 = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9WlT0W4AAAAASUVORK5CYII=',
+  'base64',
+);
 
 @Injectable()
 export class ReceiptsService {
   constructor(
     private readonly prisma: PrismaService,
   ) {}
+
+  private async fetchImageBuffer(
+    url: string,
+  ): Promise<Buffer> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      return TRANSPARENT_PNG_1X1;
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
 
   /**
    * Generate receipt by order number (website flow)
@@ -57,11 +75,13 @@ export class ReceiptsService {
       throw new NotFoundException('Sale not found');
     }
 
-    // 1️⃣ Fetch logo from Cloudinary → Buffer
-    const response = await fetch(LOGO_URL);
-    const logoBuffer = Buffer.from(
-      await response.arrayBuffer(),
-    );
+    // 1️⃣ Fetch assets
+    const [logoBuffer, phoneIcon, instagramIcon] =
+      await Promise.all([
+        this.fetchImageBuffer(LOGO_URL),
+        this.fetchImageBuffer(PHONE_ICON_URL),
+        this.fetchImageBuffer(INSTAGRAM_ICON_URL),
+      ]);
 
     // 2️⃣ Map items
     const items = sale.items.map((item) => ({
@@ -81,6 +101,8 @@ export class ReceiptsService {
         totalAmount: sale.totalAmount,
       },
       logoBuffer,
+      phoneIcon,
+      instagramIcon,
     );
 
     // 4️⃣ Convert stream → Buffer
