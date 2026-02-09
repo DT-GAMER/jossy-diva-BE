@@ -13,6 +13,8 @@ import { CreateSaleDto } from './dto/create-sale.dto';
 import { PriceUtil } from '../common/utils/price.util';
 import { SaleSource } from '../common/constants/sale-source.constant';
 import { ReceiptsService } from '../reciepts/reciepts.service';
+import { ReceiptNumberUtil } from '../utils/reciept-number.util';
+import { DateUtil } from '../common/utils/date.util';
 
 @Injectable()
 export class SalesService {
@@ -71,9 +73,26 @@ export class SalesService {
       });
     }
 
-    // 1️⃣ Create sale record
+    // ✅ Generate receipt number (standardized)
+    const receiptDate = DateUtil.now();
+    const saleCountToday = await this.prisma.sale.count({
+      where: {
+        createdAt: {
+          gte: DateUtil.startOfDay(receiptDate),
+          lte: DateUtil.endOfDay(receiptDate),
+        },
+      },
+    });
+
+    const receiptNumber = ReceiptNumberUtil.generate(
+      receiptDate,
+      saleCountToday + 1,
+    );
+
+    // 1️⃣ Create sale
     const sale = await this.prisma.sale.create({
       data: {
+        receiptNumber,
         source: SaleSource.WALK_IN,
         totalAmount,
         profit: totalProfit,
@@ -91,7 +110,7 @@ export class SalesService {
       },
     });
 
-    // 2️⃣ Generate receipt (NON-BLOCKING)
+    // 2️⃣ Generate receipt PDF (non-blocking)
     this.receiptsService
       .generateReceipt(sale.id)
       .catch((error) => {

@@ -9,3 +9,4 @@ export class ReceiptNumberUtil {
     return `JD-RCPT-${yyyy}${mm}${dd}-${seq}`;
   }
 }
+

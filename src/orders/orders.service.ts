@@ -16,6 +16,7 @@ import { OrderNumberUtil } from '../common/utils/order-number.util';
 import { DateUtil } from '../common/utils/date.util';
 import { PriceUtil } from '../common/utils/price.util';
 import { ReceiptsService } from '../reciepts/reciepts.service';
+import { ReceiptNumberUtil } from 'src/utils/reciept-number.util';
 
 @Injectable()
 export class OrdersService {
@@ -183,9 +184,26 @@ export class OrdersService {
         });
       }
 
+      const receiptDate = DateUtil.now();
+      const saleCountToday = await this.prisma.sale.count({
+        where: {
+          createdAt: {
+            gte: DateUtil.startOfDay(receiptDate),
+            lte: DateUtil.endOfDay(receiptDate),
+          },
+        },
+      });
+
+      const receiptNumber = ReceiptNumberUtil.generate(
+        receiptDate,
+        saleCountToday + 1,
+      );
+
+
       // 1️⃣ Create sale
       const sale = await this.prisma.sale.create({
         data: {
+          receiptNumber,
           source: SaleSource.WEBSITE,
           orderNumber: order.orderNumber,
           totalAmount,
