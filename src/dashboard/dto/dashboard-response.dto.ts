@@ -26,7 +26,7 @@ export class PendingOrderItemDto {
   @ApiProperty({ example: '0b9a1f5e-3d61-466d-a5a4-302712f3bb0e' })
   id: string;
 
-  @ApiProperty({ example: 'JDC-20260207-0001' })
+  @ApiProperty({ example: 'JD-20260207-0001' })
   orderNumber: string;
 
   @ApiProperty({ example: 'Jane Doe' })

@@ -4,7 +4,7 @@ import { OrderStatus } from '../../common/constants/order-status.constant';
 
 export class FilterOrdersDto {
   @ApiPropertyOptional({
-    example: 'JDC-20260207-0001',
+    example: 'JD-20260207-0001',
     description: 'Search by order number or customer name',
   })
   @IsOptional()

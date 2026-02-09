@@ -6,6 +6,7 @@ import {
   IsPositive,
   IsString,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
@@ -35,13 +36,41 @@ export class UpdateProductDto {
   sellingPrice?: number;
 
   @ApiPropertyOptional({ enum: ['percentage', 'fixed'], example: 'fixed' })
-  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const normalized = value.trim().toLowerCase();
+    return normalized === '' ? undefined : normalized;
+  })
+  @ValidateIf(
+    (o: UpdateProductDto) =>
+      o.discountType !== undefined ||
+      o.discountValue !== undefined,
+  )
   @IsEnum(['percentage', 'fixed'])
   discountType?: 'percentage' | 'fixed';
 
   @ApiPropertyOptional({ example: 1000, minimum: 1 })
-  @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+    if (typeof value === 'string') {
+      const normalized = value.trim();
+      if (!normalized) {
+        return undefined;
+      }
+      const parsed = Number(normalized);
+      return Number.isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
+  @ValidateIf(
+    (o: UpdateProductDto) =>
+      o.discountType !== undefined ||
+      o.discountValue !== undefined,
+  )
   @IsInt()
   @Min(1)
   discountValue?: number;

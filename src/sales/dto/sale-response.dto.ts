@@ -28,7 +28,7 @@ export class SaleResponseDto {
   @ApiProperty({ enum: SaleSource, example: SaleSource.WALK_IN })
   source: SaleSource;
 
-  @ApiPropertyOptional({ example: 'JDC-20260207-0001' })
+  @ApiPropertyOptional({ example: 'JD-20260207-0001' })
   orderNumber?: string | null;
 
   @ApiProperty({ example: 36000 })

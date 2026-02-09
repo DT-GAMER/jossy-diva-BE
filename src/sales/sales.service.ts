@@ -4,6 +4,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -11,12 +12,16 @@ import { InventoryService } from '../inventory/inventory.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { PriceUtil } from '../common/utils/price.util';
 import { SaleSource } from '../common/constants/sale-source.constant';
+import { ReceiptsService } from '../reciepts/reciepts.service';
 
 @Injectable()
 export class SalesService {
+  private readonly logger = new Logger(SalesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly inventoryService: InventoryService,
+    private readonly receiptsService: ReceiptsService,
   ) {}
 
   /**
@@ -30,7 +35,9 @@ export class SalesService {
 
     let totalAmount = 0;
     let totalProfit = 0;
-    const saleItemsData: Prisma.SaleItemUncheckedCreateWithoutSaleInput[] = [];
+
+    const saleItemsData: Prisma.SaleItemUncheckedCreateWithoutSaleInput[] =
+      [];
 
     for (const item of dto.items) {
       const product = await this.prisma.product.findUnique({
@@ -64,8 +71,8 @@ export class SalesService {
       });
     }
 
-    // Create sale record
-    return this.prisma.sale.create({
+    // 1️⃣ Create sale record
+    const sale = await this.prisma.sale.create({
       data: {
         source: SaleSource.WALK_IN,
         totalAmount,
@@ -76,9 +83,25 @@ export class SalesService {
         },
       },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
+
+    // 2️⃣ Generate receipt (NON-BLOCKING)
+    this.receiptsService
+      .generateReceipt(sale.id)
+      .catch((error) => {
+        this.logger.error(
+          `Failed to generate receipt for sale ${sale.id}`,
+          error,
+        );
+      });
+
+    return sale;
   }
 
   /**
@@ -87,7 +110,11 @@ export class SalesService {
   async findAll() {
     return this.prisma.sale.findMany({
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',

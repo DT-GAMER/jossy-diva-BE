@@ -95,7 +95,8 @@ model Sale {
   id            String      @id @default(uuid())
   source        SaleSource
   orderNumber   String?
-
+  customerPhone String?
+  receiptNumber String   @unique
   totalAmount   Int
   profit        Int
   paymentMethod PaymentMethod
