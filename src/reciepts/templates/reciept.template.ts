@@ -36,15 +36,9 @@ export function generateReceiptPDF(
      HEADER
   ===================================================== */
 
-  doc.rect(0, 0, doc.page.width, 120).fill(BRAND_BLUE);
+   doc.rect(0, 0, doc.page.width, 120).fill(BRAND_BLUE);
 
-  // Gold badge behind logo (contrast fix)
-  doc
-    .circle(65, 60, 28)
-    .fill(BRAND_GOLD);
-
-  // Bigger logo
-
+  // Logo
   doc.image(logoBuffer, 40, 22, { width: 70 });
 
   doc
@@ -61,6 +55,7 @@ export function generateReceiptPDF(
   doc
     .fontSize(9)
     .text('NO 10, Dalemo Road, Alakuko, Lagos State', 120, 68);
+
 
   // Icons row (NO EMOJIS)
   const iconY = 86;
