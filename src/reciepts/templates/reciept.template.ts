@@ -44,7 +44,8 @@ export function generateReceiptPDF(
     .fill(BRAND_GOLD);
 
   // Bigger logo
-  doc.image(logoBuffer, 40, 30, { width: 50 });
+
+  doc.image(logoBuffer, 40, 22, { width: 70 });
 
   doc
     .fillColor('#FFFFFF')
