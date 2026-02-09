@@ -12,6 +12,8 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  ValidationPipe,
+  UsePipes,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -44,8 +46,7 @@ import { AdminOnly } from '../common/decorators/admin-only.decorator';
 @UseGuards(JwtAuthGuard)
 @AdminOnly()
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
-
+  constructor(private readonly productsService: ProductsService) { }
   @Post()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -61,8 +62,7 @@ export class ProductsController {
                 type: 'string',
                 format: 'binary',
               },
-              description:
-                'Optional product media files (max 2)',
+              description: 'Optional product media files (max 2)',
             },
           },
         },
@@ -71,12 +71,20 @@ export class ProductsController {
   })
   @ApiCreatedResponse({ type: ProductResponseDto })
   @UseInterceptors(FilesInterceptor('files', 2))
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  )
   create(
     @Body() dto: CreateProductDto,
     @UploadedFiles() files?: UploadedMediaFile[],
   ) {
     return this.productsService.create(dto, files ?? []);
   }
+
 
   @Get()
   @ApiQuery({
