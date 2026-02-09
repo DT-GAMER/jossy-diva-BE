@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
-import { Version } from '@nestjs/common';
 
 import { ReceiptsService } from './reciepts.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -21,9 +20,11 @@ import { AdminOnly } from '../common/decorators/admin-only.decorator';
 @UseGuards(JwtAuthGuard)
 @AdminOnly()
 export class ReceiptsController {
-  constructor(private readonly receiptsService: ReceiptsService) {}
+  constructor(
+    private readonly receiptsService: ReceiptsService,
+  ) {}
 
-   /**
+  /**
    * Download receipt by SALE ID
    * (walk-in & website sales)
    */
@@ -35,13 +36,13 @@ export class ReceiptsController {
     const pdf =
       await this.receiptsService.generateReceipt(saleId);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename="receipt-${saleId}.pdf"`,
-    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="receipt-${saleId}.pdf"`,
+      'Content-Length': pdf.length,
+    });
 
-    res.send(pdf);
+    res.end(pdf);
   }
 
   /**
@@ -58,12 +59,12 @@ export class ReceiptsController {
         orderNumber,
       );
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename="receipt-${orderNumber}.pdf"`,
-    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="receipt-${orderNumber}.pdf"`,
+      'Content-Length': pdf.length,
+    });
 
-    res.send(pdf);
+    res.end(pdf);
   }
 }
