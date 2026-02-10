@@ -13,24 +13,68 @@ import { Transform, Type } from 'class-transformer';
 import { ProductCategory } from '../../common/constants/categories.constant';
 
 export class UpdateProductDto {
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    isArray: true,
+    description: 'Optional product media files (multipart field)',
+  })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  files?: unknown;
+
   @ApiPropertyOptional({ example: 'Classic Sneakers' })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const trimmed = value.trim();
+    return trimmed === '' ? undefined : trimmed;
+  })
   @IsString()
   name?: string;
 
   @ApiPropertyOptional({ example: 'Updated product description' })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const trimmed = value.trim();
+    return trimmed === '' ? undefined : trimmed;
+  })
   @IsString()
   description?: string;
 
   @ApiPropertyOptional({ enum: ProductCategory, example: ProductCategory.SHOES })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value !== 'string') {
+      return value;
+    }
+    const trimmed = value.trim();
+    return trimmed === '' ? undefined : trimmed;
+  })
   @IsEnum(ProductCategory)
   category?: ProductCategory;
 
   @ApiPropertyOptional({ example: 20000, minimum: 1 })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return undefined;
+      }
+      const parsed = Number(trimmed);
+      return Number.isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
   @IsInt()
   @IsPositive()
   sellingPrice?: number;
@@ -77,7 +121,20 @@ export class UpdateProductDto {
 
   @ApiPropertyOptional({ example: 25, minimum: 0 })
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return undefined;
+      }
+      const parsed = Number(trimmed);
+      return Number.isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  })
   @IsInt()
   @Min(0)
   quantity?: number;
@@ -85,6 +142,9 @@ export class UpdateProductDto {
   @ApiPropertyOptional({ example: false })
   @IsOptional()
   @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
     if (typeof value === 'boolean') {
       return value;
     }

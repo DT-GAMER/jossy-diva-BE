@@ -134,7 +134,13 @@ export class ProductsService {
   ) {
     const existingProduct = await this.findOne(id);
 
-    if (existingProduct.media.length + files.length > 2) {
+    const { files: _ignored, ...updateData } = dto as UpdateProductDto & {
+      files?: unknown;
+    };
+
+    const validFiles = files.filter((file) => file && file.originalname);
+
+    if (existingProduct.media.length + validFiles.length > 2) {
       throw new BadRequestException(
         'Maximum of 2 media files allowed per product',
       );
@@ -143,14 +149,14 @@ export class ProductsService {
     await this.prisma.product.update({
       where: { id },
       data: {
-        ...dto,
-        discountType: dto.discountType
-          ? (dto.discountType.toUpperCase() as any)
+        ...updateData,
+        discountType: updateData.discountType
+          ? (updateData.discountType.toUpperCase() as any)
           : undefined,
       },
     });
 
-    for (const file of files) {
+    for (const file of validFiles) {
       await this.mediaService.uploadProductMedia(id, file);
     }
 

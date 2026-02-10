@@ -5,6 +5,7 @@ import {
   Post,
   Get,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -145,7 +146,54 @@ export class ProductsController {
   })
   @ApiOkResponse({ type: ProductResponseDto })
   @UseInterceptors(FilesInterceptor('files', 2))
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  )
   update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+    @UploadedFiles() files?: UploadedMediaFile[],
+  ) {
+    return this.productsService.update(id, dto, files ?? []);
+  }
+
+  @Patch(':id')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(UpdateProductDto) },
+        {
+          type: 'object',
+          properties: {
+            files: {
+              type: 'array',
+              items: {
+                type: 'string',
+                format: 'binary',
+              },
+              description:
+                'Optional new media files to add (max 2 total per product)',
+            },
+          },
+        },
+      ],
+    },
+  })
+  @ApiOkResponse({ type: ProductResponseDto })
+  @UseInterceptors(FilesInterceptor('files', 2))
+  @UsePipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  )
+  patchUpdate(
     @Param('id') id: string,
     @Body() dto: UpdateProductDto,
     @UploadedFiles() files?: UploadedMediaFile[],
