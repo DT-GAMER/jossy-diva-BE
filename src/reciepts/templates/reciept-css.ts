@@ -13,16 +13,18 @@ body {
   margin: 0;
   padding: 40px;
   font-family: 'Inter', Arial, sans-serif;
-  color: #0f172a;
-  background: #ffffff;
+  color: #1f2937;
+  background: radial-gradient(circle at top right, #f7f1e8 0%, #ffffff 45%, #fbf8f2 100%);
 }
 
 /* ================= BRAND TOKENS ================= */
 :root {
-  --brand-blue: #0f172a;
-  --brand-gold: #d4af37;
-  --gray: #475569;
-  --light-gray: #f1f5f9;
+  --brand-ink: #1f2937;
+  --brand-accent: #c08a2f;
+  --brand-rose: #b86a5f;
+  --brand-sand: #f6efe4;
+  --gray: #6b7280;
+  --light-gray: #f2eee6;
 }
 
 /* ================= WATERMARK ================= */
@@ -36,9 +38,24 @@ body {
   z-index: 0;
 }
 
+.watermark::before {
+  content: '';
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: #efe6d6;
+  opacity: 0.35;
+}
+
 .watermark img {
-  width: 420px;
-  opacity: 0.12; /* tuned for visibility */
+  width: 360px;
+  opacity: 0.12; /* dimmer watermark */
+  filter: grayscale(0.4) brightness(1.05) contrast(1.02) drop-shadow(0 0 0 transparent);
+  background: #ffffff;
+  border-radius: 50%;
+  padding: 10px;
+  box-shadow: none;
 }
 
 /* ================= HEADER ================= */
@@ -48,25 +65,31 @@ body {
   display: grid;
   grid-template-columns: 80px 1fr;
   gap: 16px;
-  background: var(--brand-blue);
+  background: linear-gradient(135deg, #2b2a2a 0%, #3d3128 55%, #5b3b32 100%);
   color: #ffffff;
   padding: 24px;
   border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(31, 41, 55, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .logo {
   width: 70px;
   height: 70px;
   border-radius: 50%;
-  background: #111827;
+  background: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--brand-gold);
+  border: 2px solid var(--brand-accent);
+  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.18);
 }
 
 .logo img {
-  width: 42px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 /* ================= BRAND TEXT ================= */
@@ -91,7 +114,7 @@ body {
 }
 
 .brand .contact i {
-  color: var(--brand-gold);
+  color: var(--brand-accent);
   margin-right: 4px;
 }
 
@@ -104,6 +127,10 @@ body {
   grid-template-columns: 160px 1fr;
   row-gap: 10px;
   font-size: 13px;
+  padding: 18px 20px;
+  background: var(--brand-sand);
+  border-radius: 10px;
+  border: 1px solid #eadfcd;
 }
 
 .meta strong {
@@ -121,16 +148,18 @@ table {
 }
 
 thead th {
-  background: var(--light-gray);
+  background: #efe7db;
   text-align: left;
   padding: 12px;
   font-weight: 600;
-  color: var(--brand-blue);
+  color: var(--brand-ink);
+  border-top: 2px solid var(--brand-accent);
+  border-bottom: 2px solid var(--brand-accent);
 }
 
 tbody td {
   padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e7dfd3;
 }
 
 .qty,
@@ -154,12 +183,12 @@ tbody td {
 .summary span {
   font-size: 14px;
   font-weight: 600;
-  color: var(--brand-blue);
+  color: var(--brand-ink);
 }
 
 .summary strong {
   font-size: 20px;
-  color: var(--brand-gold);
+  color: var(--brand-rose);
 }
 
 /* ================= FOOTER ================= */
@@ -183,7 +212,7 @@ tbody td {
 }
 
 .footer i {
-  color: var(--brand-gold);
+  color: var(--brand-accent);
   margin-right: 4px;
 }
 

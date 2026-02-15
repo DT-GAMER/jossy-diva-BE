@@ -51,7 +51,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
   <!-- WATERMARK -->
   <div class="watermark">
     <img
-      src="https://res.cloudinary.com/dofiyn7bw/image/upload/v1770621010/Gemini_Generated_Image_sebyzqsebyzqseby-removebg-preview_viygn2.png"
+      src="https://res.cloudinary.com/dofiyn7bw/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1771070387/Gemini_Generated_Image_rw6skmrw6skmrw6s_hq6dp3.png"
       width="420"
       alt="Jossy Diva watermark"
     />
@@ -61,7 +61,7 @@ export function generateReceiptHTML(data: ReceiptData): string {
   <div class="header">
     <div class="logo">
       <img
-        src="https://res.cloudinary.com/dofiyn7bw/image/upload/v1770621010/Gemini_Generated_Image_sebyzqsebyzqseby-removebg-preview_viygn2.png"
+        src="https://res.cloudinary.com/dofiyn7bw/image/upload/w_1000,c_fill,ar_1:1,g_auto,r_max,bo_5px_solid_red,b_rgb:262c35/v1771070387/Gemini_Generated_Image_rw6skmrw6skmrw6s_hq6dp3.png"
         width="42"
         alt="Jossy Diva logo"
       />

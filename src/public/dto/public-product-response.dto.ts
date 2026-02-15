@@ -26,4 +26,7 @@ export class PublicProductResponseDto {
 
   @ApiProperty({ example: 14 })
   available: number;
+
+  @ApiProperty({ example: false })
+  outOfStock: boolean;
 }

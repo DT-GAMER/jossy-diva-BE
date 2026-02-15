@@ -1,6 +1,6 @@
 // src/public/public.service.ts
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { OrdersService } from '../orders/orders.service';
@@ -20,9 +20,6 @@ export class PublicService {
   async getProducts(filters: FilterPublicProductsDto) {
     const where: Prisma.ProductWhereInput = {
       visibleOnWebsite: true,
-      quantity: {
-        gt: 0,
-      },
     };
 
     if (filters.category) {
@@ -77,9 +74,43 @@ export class PublicService {
       ),
       originalPrice: product.sellingPrice,
       media: product.media,
-      available:
-        product.quantity - product.reservedQuantity,
+      available: product.quantity - product.reservedQuantity,
+      outOfStock: product.quantity - product.reservedQuantity <= 0,
     }));
+  }
+
+  /**
+   * Get a single product visible on website
+   */
+  async getProductById(id: string) {
+    const product = await this.prisma.product.findFirst({
+      where: {
+        id,
+        visibleOnWebsite: true,
+      },
+      include: {
+        media: true,
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return {
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      price: PriceUtil.calculateDiscountedPrice(
+        product.sellingPrice,
+        product.discountType?.toLowerCase() as any,
+        product.discountValue ?? undefined,
+      ),
+      originalPrice: product.sellingPrice,
+      media: product.media,
+      available: product.quantity - product.reservedQuantity,
+      outOfStock: product.quantity - product.reservedQuantity <= 0,
+    };
   }
 
   /**
