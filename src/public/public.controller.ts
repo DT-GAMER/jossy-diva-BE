@@ -8,6 +8,7 @@ import { CreateOrderDto } from '../orders/dto/create-order.dto';
 import { FilterPublicProductsDto } from './dto/filter-public-products.dto';
 import { ProductCategory } from '../common/constants/categories.constant';
 import { PublicProductResponseDto } from './dto/public-product-response.dto';
+import { PublicAccountDetailsDto } from './dto/public-account-details.dto';
 
 @ApiTags('Public')
 @Controller({ path: 'public', version: '1' })
@@ -47,6 +48,15 @@ export class PublicController {
   @ApiOkResponse({ type: PublicProductResponseDto })
   getProductById(@Param('id') id: string) {
     return this.publicService.getProductById(id);
+  }
+
+  /**
+   * Website: get account details
+   */
+  @Get('account-details')
+  @ApiOkResponse({ type: PublicAccountDetailsDto })
+  getAccountDetails() {
+    return this.publicService.getAccountDetails();
   }
 
   /**

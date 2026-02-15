@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { OrdersService } from '../orders/orders.service';
 import { PriceUtil } from '../common/utils/price.util';
 import { FilterPublicProductsDto } from './dto/filter-public-products.dto';
+import { UserRole } from '../common/constants/roles.constant';
 
 @Injectable()
 export class PublicService {
@@ -119,5 +120,27 @@ export class PublicService {
    */
   async createOrder(payload: any) {
     return this.ordersService.createOrder(payload);
+  }
+
+  /**
+   * Get public account details (admin)
+   */
+  async getAccountDetails() {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        role: UserRole.ADMIN,
+      },
+      select: {
+        bankName: true,
+        accountName: true,
+        accountNumber: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Account details not found');
+    }
+
+    return user;
   }
 }

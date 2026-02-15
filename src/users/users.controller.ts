@@ -1,6 +1,6 @@
 // src/users/users.controller.ts
 
-import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Patch, Body, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
@@ -34,6 +34,19 @@ export class UsersController {
   @ApiBody({ type: UpdateProfileDto })
   @ApiOkResponse({ type: ProfileResponseDto })
   updateProfile(
+    @CurrentUser('id') userId: string,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.usersService.updateProfile(userId, dto);
+  }
+
+  /**
+   * Patch admin profile
+   */
+  @Patch('me')
+  @ApiBody({ type: UpdateProfileDto })
+  @ApiOkResponse({ type: ProfileResponseDto })
+  patchProfile(
     @CurrentUser('id') userId: string,
     @Body() dto: UpdateProfileDto,
   ) {

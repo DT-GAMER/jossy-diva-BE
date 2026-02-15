@@ -7,14 +7,18 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      UserRole @default(ADMIN)
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  password      String
+  role          UserRole @default(ADMIN)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  bankName      String?
+  accountName   String?
+  accountNumber String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 enum UserRole {

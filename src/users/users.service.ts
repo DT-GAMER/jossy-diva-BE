@@ -18,6 +18,9 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+        bankName: true,
+        accountName: true,
+        accountNumber: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -53,6 +56,9 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+        bankName: true,
+        accountName: true,
+        accountNumber: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -61,4 +67,3 @@ export class UsersService {
     return updatedUser;
   }
 }
-
