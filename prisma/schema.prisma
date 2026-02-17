@@ -42,6 +42,8 @@ model Product {
   reservedQuantity  Int      @default(0)
 
   visibleOnWebsite  Boolean  @default(false)
+  isArchived        Boolean  @default(false)
+  archivedAt        DateTime?
 
   media             ProductMedia[]
   orderItems        OrderItem[]

@@ -3,6 +3,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -16,9 +17,12 @@ import {
 } from '../common/constants/categories.constant';
 import { MediaService } from '../media/media.service';
 import type { UploadedMediaFile } from '../media/types/uploaded-media-file.type';
+import { OrderStatus } from '../common/constants/order-status.constant';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly mediaService: MediaService,
@@ -88,6 +92,7 @@ export class ProductsService {
 
   async findAll(filters: FilterProductsDto) {
     const where = {
+      isArchived: false,
       ...(filters.category ? { category: filters.category } : {}),
       ...(filters.search
         ? {
@@ -167,11 +172,52 @@ export class ProductsService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    this.logger.log(`Attempting to delete product: ${id}`);
 
-    return this.prisma.product.delete({
-      where: { id },
+    const existingProduct = await this.findOne(id);
+    this.logger.log(
+      `Product found for deletion: ${existingProduct.id} (${existingProduct.name})`,
+    );
+
+    const hasPendingOrder = await this.prisma.orderItem.findFirst({
+      where: {
+        productId: id,
+        order: {
+          status: OrderStatus.PENDING_PAYMENT,
+        },
+      },
+      select: { id: true },
     });
+
+    if (hasPendingOrder) {
+      throw new BadRequestException(
+        'Cannot archive product with pending orders',
+      );
+    }
+
+    if (existingProduct.isArchived) {
+      this.logger.log(`Product already archived: ${existingProduct.id}`);
+      return existingProduct;
+    }
+
+    try {
+      const archived = await this.prisma.product.update({
+        where: { id },
+        data: {
+          isArchived: true,
+          archivedAt: new Date(),
+        },
+      });
+      this.logger.log(`Archived product: ${archived.id}`);
+      return archived;
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Failed to delete product: ${id}. ${message}`,
+      );
+      throw error;
+    }
   }
 
   /**
@@ -181,6 +227,7 @@ export class ProductsService {
     const products = await this.prisma.product.findMany({
       where: {
         visibleOnWebsite: true,
+        isArchived: false,
         quantity: {
           gt: 0,
         },

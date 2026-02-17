@@ -44,6 +44,7 @@ export class DashboardService {
     // Low stock alerts
     const lowStockProducts = await this.prisma.product.findMany({
       where: {
+        isArchived: false,
         quantity: {
           lte: this.LOW_STOCK_THRESHOLD,
         },

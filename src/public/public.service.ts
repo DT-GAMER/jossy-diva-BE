@@ -21,6 +21,7 @@ export class PublicService {
   async getProducts(filters: FilterPublicProductsDto) {
     const where: Prisma.ProductWhereInput = {
       visibleOnWebsite: true,
+      isArchived: false,
     };
 
     if (filters.category) {
@@ -88,6 +89,7 @@ export class PublicService {
       where: {
         id,
         visibleOnWebsite: true,
+        isArchived: false,
       },
       include: {
         media: true,
