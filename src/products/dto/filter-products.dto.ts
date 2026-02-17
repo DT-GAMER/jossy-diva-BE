@@ -13,7 +13,7 @@ export class FilterProductsDto {
 
   @ApiPropertyOptional({
     enum: ProductCategory,
-    example: ProductCategory.SHOES,
+    example: ProductCategory.MEN_SHOES,
   })
   @IsOptional()
   @IsEnum(ProductCategory)

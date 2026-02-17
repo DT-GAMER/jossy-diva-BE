@@ -1,15 +1,5 @@
-export enum ProductCategory {
-  MEN_CLOTHINGS = 'MEN_CLOTHINGS',
-  WOMEN_CLOTHINGS = 'WOMEN_CLOTHINGS',
-  MEN_SHOES = 'MEN_SHOES',
-  WOMEN_SHOES = 'WOMEN_SHOES',
-  PERFUMES = 'PERFUMES',
-  SKIN_CARES = 'SKIN_CARES',
-  WATCHES = 'WATCHES',
-  JEWELRIES = 'JEWELRIES',
-  FASHION_GLASSES = 'FASHION_GLASSES',
-  BAGS = 'BAGS',
-  BODY_SPRAY = 'BODY_SPRAY',
-}
+import { ProductCategory } from '@prisma/client';
+
+export { ProductCategory };
 
 export const PRODUCT_CATEGORIES = Object.values(ProductCategory);

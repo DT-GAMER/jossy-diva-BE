@@ -25,7 +25,7 @@ export class ProductResponseDto {
   @ApiProperty({ example: 'Unisex casual sneakers with breathable fabric' })
   description: string;
 
-  @ApiProperty({ enum: ProductCategory, example: ProductCategory.SHOES })
+  @ApiProperty({ enum: ProductCategory, example: ProductCategory.MEN_SHOES })
   category: ProductCategory;
 
   @ApiProperty({ example: 12000 })

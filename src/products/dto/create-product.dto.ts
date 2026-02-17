@@ -17,7 +17,7 @@ export class CreateProductDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ enum: ProductCategory })
+  @ApiProperty({ enum: ProductCategory, example: ProductCategory.MEN_SHOES })
   @IsEnum(ProductCategory)
   category: ProductCategory;
 

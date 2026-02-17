@@ -14,7 +14,7 @@ export class FilterPublicProductsDto {
 
   @ApiPropertyOptional({
     enum: ProductCategory,
-    example: ProductCategory.SHOES,
+    example: ProductCategory.MEN_SHOES,
   })
   @IsOptional()
   @IsEnum(ProductCategory)

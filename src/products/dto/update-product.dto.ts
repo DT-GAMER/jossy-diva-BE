@@ -47,7 +47,10 @@ export class UpdateProductDto {
   @IsString()
   description?: string;
 
-  @ApiPropertyOptional({ enum: ProductCategory, example: ProductCategory.SHOES })
+  @ApiPropertyOptional({
+    enum: ProductCategory,
+    example: ProductCategory.MEN_SHOES,
+  })
   @IsOptional()
   @Transform(({ value }) => {
     if (typeof value !== 'string') {
