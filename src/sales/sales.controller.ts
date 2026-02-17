@@ -6,6 +6,7 @@ import {
   Get,
   Body,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -18,6 +19,7 @@ import {
 import { SalesService } from './sales.service';
 import { CreateSaleDto } from './dto/create-sale.dto';
 import { SaleResponseDto } from './dto/sale-response.dto';
+import { FilterSalesDto } from './dto/filter-sales.dto';
 
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminOnly } from '../common/decorators/admin-only.decorator';
@@ -45,7 +47,7 @@ export class SalesController {
    */
   @Get()
   @ApiOkResponse({ type: SaleResponseDto, isArray: true })
-  findAll() {
-    return this.salesService.findAll();
+  findAll(@Query() query: FilterSalesDto) {
+    return this.salesService.findAll(query);
   }
 }

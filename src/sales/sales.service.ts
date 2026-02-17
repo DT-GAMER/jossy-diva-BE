@@ -15,6 +15,7 @@ import { SaleSource } from '../common/constants/sale-source.constant';
 import { ReceiptsService } from '../reciepts/reciepts.service';
 import { ReceiptNumberUtil } from '../utils/reciept-number.util';
 import { DateUtil } from '../common/utils/date.util';
+import { FilterSalesDto } from './dto/filter-sales.dto';
 
 @Injectable()
 export class SalesService {
@@ -126,8 +127,90 @@ export class SalesService {
   /**
    * Get all sales (admin)
    */
-  async findAll() {
+  async findAll(filters: FilterSalesDto) {
+    const where: Prisma.SaleWhereInput = {};
+
+    if (filters.source) {
+      where.source = filters.source;
+    }
+
+    if (filters.paymentMethod) {
+      where.paymentMethod = filters.paymentMethod;
+    }
+
+    if (filters.search) {
+      where.OR = [
+        {
+          receiptNumber: {
+            contains: filters.search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          orderNumber: {
+            contains: filters.search,
+            mode: 'insensitive',
+          },
+        },
+        {
+          customerPhone: {
+            contains: filters.search,
+            mode: 'insensitive',
+          },
+        },
+      ];
+    }
+
+    const hasStartEnd = !!(filters.startDate || filters.endDate);
+    const hasDate = !!filters.date;
+    const isToday = !!filters.today;
+
+    if (isToday && (hasDate || hasStartEnd)) {
+      throw new BadRequestException(
+        'Use only one of today, date, or startDate/endDate',
+      );
+    }
+
+    if (hasDate && hasStartEnd) {
+      throw new BadRequestException(
+        'Use either date or startDate/endDate, not both',
+      );
+    }
+
+    if (isToday) {
+      const today = DateUtil.now();
+      where.createdAt = {
+        gte: DateUtil.startOfDay(today),
+        lte: DateUtil.endOfDay(today),
+      };
+    } else if (hasDate) {
+      const date = new Date(filters.date as string);
+      where.createdAt = {
+        gte: DateUtil.startOfDay(date),
+        lte: DateUtil.endOfDay(date),
+      };
+    } else if (hasStartEnd) {
+      const startDate = filters.startDate
+        ? DateUtil.startOfDay(new Date(filters.startDate))
+        : undefined;
+      const endDate = filters.endDate
+        ? DateUtil.endOfDay(new Date(filters.endDate))
+        : undefined;
+
+      if (startDate && endDate && startDate > endDate) {
+        throw new BadRequestException(
+          'startDate cannot be later than endDate',
+        );
+      }
+
+      where.createdAt = {
+        gte: startDate,
+        lte: endDate,
+      };
+    }
+
     return this.prisma.sale.findMany({
+      where,
       include: {
         items: {
           include: {
