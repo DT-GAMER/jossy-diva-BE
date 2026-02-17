@@ -269,7 +269,35 @@ export class OrdersService {
       ];
     }
 
-    if (filters.startDate || filters.endDate) {
+    const hasStartEnd = !!(filters.startDate || filters.endDate);
+    const hasDate = !!filters.date;
+    const isToday = !!filters.today;
+
+    if (isToday && (hasDate || hasStartEnd)) {
+      throw new BadRequestException(
+        'Use only one of today, date, or startDate/endDate',
+      );
+    }
+
+    if (hasDate && hasStartEnd) {
+      throw new BadRequestException(
+        'Use either date or startDate/endDate, not both',
+      );
+    }
+
+    if (isToday) {
+      const today = DateUtil.now();
+      where.createdAt = {
+        gte: DateUtil.startOfDay(today),
+        lte: DateUtil.endOfDay(today),
+      };
+    } else if (hasDate) {
+      const date = new Date(filters.date as string);
+      where.createdAt = {
+        gte: DateUtil.startOfDay(date),
+        lte: DateUtil.endOfDay(date),
+      };
+    } else if (hasStartEnd) {
       const startDate = filters.startDate
         ? DateUtil.startOfDay(new Date(filters.startDate))
         : undefined;
