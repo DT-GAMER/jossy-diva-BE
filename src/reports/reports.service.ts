@@ -5,6 +5,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { DateUtil } from '../common/utils/date.util';
 import { SaleSource } from '../common/constants/sale-source.constant';
 import { ReportRangeDto } from './dto/report-range.dto';
+import { PdfGenerator } from '../pdf/pdf';
+import { generateReportHTML } from './templates/report-html';
 
 @Injectable()
 export class ReportsService {
@@ -80,10 +82,21 @@ export class ReportsService {
     }
 
     const report = await this.buildReport(start, end);
-    return this.buildSimplePdfBuffer(
-      `Custom Report (${range.startDate} to ${range.endDate})`,
+    const title = 'Custom Sales Report';
+    const dateRange = `${range.startDate} to ${range.endDate}`;
+    const generatedAt = new Date().toLocaleString('en-NG', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+
+    const html = generateReportHTML({
+      title,
+      dateRange,
+      generatedAt,
       report,
-    );
+    });
+
+    return PdfGenerator.generatePdf({ html });
   }
 
   /**
@@ -163,84 +176,5 @@ export class ReportsService {
     };
   }
 
-  private buildSimplePdfBuffer(
-    title: string,
-    report: {
-      revenue: number;
-      profit: number;
-      profitMargin: number;
-      transactions: number;
-      bySource: Record<SaleSource, { revenue: number; profit: number }>;
-      byCategory: Record<string, { revenue: number; profit: number }>;
-    },
-  ) {
-    const lines = [
-      title,
-      '',
-      `Revenue: ${report.revenue}`,
-      `Profit: ${report.profit}`,
-      `Profit Margin: ${report.profitMargin.toFixed(2)}%`,
-      `Transactions: ${report.transactions}`,
-      '',
-      'By Source:',
-      ...Object.entries(report.bySource).map(
-        ([source, data]) =>
-          `- ${source}: revenue=${data.revenue}, profit=${data.profit}`,
-      ),
-      '',
-      'By Category:',
-      ...Object.entries(report.byCategory).map(
-        ([category, data]) =>
-          `- ${category}: revenue=${data.revenue}, profit=${data.profit}`,
-      ),
-    ];
-
-    const escapedLines = lines.map((line) =>
-      line.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)'),
-    );
-
-    const textCommands = escapedLines
-      .map((line, index) => {
-        const y = 780 - index * 18;
-        return `1 0 0 1 50 ${y} Tm (${line}) Tj`;
-      })
-      .join('\n');
-
-    const stream = `BT
-/F1 12 Tf
-${textCommands}
-ET`;
-
-    const objects = [
-      '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
-      '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
-      '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n',
-      '4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n',
-      `5 0 obj\n<< /Length ${Buffer.byteLength(stream, 'utf8')} >>\nstream\n${stream}\nendstream\nendobj\n`,
-    ];
-
-    let pdf = '%PDF-1.4\n';
-    const offsets: number[] = [0];
-
-    for (const obj of objects) {
-      offsets.push(Buffer.byteLength(pdf, 'utf8'));
-      pdf += obj;
-    }
-
-    const xrefStart = Buffer.byteLength(pdf, 'utf8');
-    pdf += `xref
-0 ${objects.length + 1}
-0000000000 65535 f 
-${offsets
-  .slice(1)
-  .map((offset) => `${offset.toString().padStart(10, '0')} 00000 n `)
-  .join('\n')}
-trailer
-<< /Size ${objects.length + 1} /Root 1 0 R >>
-startxref
-${xrefStart}
-%%EOF`;
-
-    return Buffer.from(pdf, 'utf8');
-  }
+  // Legacy plain-text PDF builder removed in favor of HTML template
 }
