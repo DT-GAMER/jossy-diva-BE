@@ -36,7 +36,7 @@ export class ReportResponseDto {
       },
     },
     example: {
-      SHOES: { revenue: 120000, profit: 40000 },
+      MEN_SHOES: { revenue: 120000, profit: 40000 },
       PERFUMES: { revenue: 130000, profit: 45000 },
     },
   })
