@@ -37,9 +37,9 @@ export class ProductsService {
     (f) => f && f.originalname,
   );
 
-  if (validFiles.length > 2) {
+  if (validFiles.length > 3) {
     throw new BadRequestException(
-      'Maximum of 2 media files allowed per product',
+      'Maximum of 3 media files allowed per product',
     );
   }
 
@@ -53,11 +53,11 @@ export class ProductsService {
     );
   }
 
-  const product = await this.prisma.product.create({
-    data: {
-      name: dto.name,
-      description: dto.description,
-      category: dto.category,
+    const product = await this.prisma.product.create({
+      data: {
+        name: dto.name,
+        description: dto.description,
+        category: dto.category,
       costPrice: dto.costPrice,
       sellingPrice: dto.sellingPrice,
       discountType: dto.discountType, // ✅ trust DTO
@@ -65,8 +65,16 @@ export class ProductsService {
       quantity: dto.quantity,
       visibleOnWebsite: dto.visibleOnWebsite,
     },
-    include: {
-      media: true,
+      include: {
+      media: {
+        select: {
+          id: true,
+          productId: true,
+          url: true,
+          type: true,
+          createdAt: true,
+        },
+      },
     },
   });
 
@@ -84,7 +92,15 @@ export class ProductsService {
   return this.prisma.product.findUnique({
     where: { id: product.id },
     include: {
-      media: true,
+      media: {
+        select: {
+          id: true,
+          productId: true,
+          url: true,
+          type: true,
+          createdAt: true,
+        },
+      },
     },
   });
 }
@@ -107,7 +123,15 @@ export class ProductsService {
     return this.prisma.product.findMany({
       where,
       include: {
-        media: true,
+        media: {
+          select: {
+            id: true,
+            productId: true,
+            url: true,
+            type: true,
+            createdAt: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -122,7 +146,17 @@ export class ProductsService {
   async findOne(id: string) {
     const product = await this.prisma.product.findUnique({
       where: { id },
-      include: { media: true },
+      include: {
+        media: {
+          select: {
+            id: true,
+            productId: true,
+            url: true,
+            type: true,
+            createdAt: true,
+          },
+        },
+      },
     });
 
     if (!product) {
@@ -145,9 +179,9 @@ export class ProductsService {
 
     const validFiles = files.filter((file) => file && file.originalname);
 
-    if (existingProduct.media.length + validFiles.length > 2) {
+    if (existingProduct.media.length + validFiles.length > 3) {
       throw new BadRequestException(
-        'Maximum of 2 media files allowed per product',
+        'Maximum of 3 media files allowed per product',
       );
     }
 
@@ -167,7 +201,17 @@ export class ProductsService {
 
     return this.prisma.product.findUnique({
       where: { id },
-      include: { media: true },
+      include: {
+        media: {
+          select: {
+            id: true,
+            productId: true,
+            url: true,
+            type: true,
+            createdAt: true,
+          },
+        },
+      },
     });
   }
 
@@ -233,7 +277,15 @@ export class ProductsService {
         },
       },
       include: {
-        media: true,
+        media: {
+          select: {
+            id: true,
+            productId: true,
+            url: true,
+            type: true,
+            createdAt: true,
+          },
+        },
       },
     });
 

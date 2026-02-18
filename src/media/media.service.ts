@@ -41,10 +41,10 @@ export class MediaService {
       throw new NotFoundException('Product not found');
     }
 
-    // Enforce max 2 media per product
-    if (product.media.length >= 2) {
+    // Enforce max 3 media per product
+    if (product.media.length >= 3) {
       throw new BadRequestException(
-        'Maximum of 2 media files allowed per product',
+        'Maximum of 3 media files allowed per product',
       );
     }
 
@@ -60,6 +60,7 @@ export class MediaService {
     let uploadResult: {
       resource_type: string;
       secure_url: string;
+      public_id: string;
     };
 
     // Support both disk storage (path) and memory storage (buffer)
@@ -102,10 +103,49 @@ export class MediaService {
       data: {
         productId: product.id,
         url: uploadResult.secure_url,
+        publicId: uploadResult.public_id,
         type: mediaType,
+      },
+      select: {
+        id: true,
+        productId: true,
+        url: true,
+        type: true,
+        createdAt: true,
       },
     });
 
     return media;
+  }
+
+  async deleteProductMedia(mediaId: string) {
+    const media = await this.prisma.productMedia.findUnique({
+      where: { id: mediaId },
+    });
+
+    if (!media) {
+      throw new NotFoundException('Media not found');
+    }
+
+    try {
+      await cloudinary.uploader.destroy(media.publicId, {
+        resource_type: media.type === 'VIDEO' ? 'video' : 'image',
+      });
+    } catch (error) {
+      throw new BadRequestException(
+        'Failed to delete media from storage',
+      );
+    }
+
+    return this.prisma.productMedia.delete({
+      where: { id: mediaId },
+      select: {
+        id: true,
+        productId: true,
+        url: true,
+        type: true,
+        createdAt: true,
+      },
+    });
   }
 }

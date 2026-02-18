@@ -58,7 +58,15 @@ export class PublicService {
     const products = await this.prisma.product.findMany({
       where,
       include: {
-        media: true,
+        media: {
+          select: {
+            id: true,
+            productId: true,
+            url: true,
+            type: true,
+            createdAt: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -92,7 +100,15 @@ export class PublicService {
         isArchived: false,
       },
       include: {
-        media: true,
+        media: {
+          select: {
+            id: true,
+            productId: true,
+            url: true,
+            type: true,
+            createdAt: true,
+          },
+        },
       },
     });
 

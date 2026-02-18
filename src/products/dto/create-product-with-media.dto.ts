@@ -6,7 +6,7 @@ export class CreateProductWithMediaDto extends CreateProductDto {
     type: 'string',
     format: 'binary',
     isArray: true,
-    description: 'Optional product media files (max 2)',
+    description: 'Optional product media files (max 3)',
   })
   files?: any[];
 }

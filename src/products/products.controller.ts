@@ -63,7 +63,7 @@ export class ProductsController {
                 type: 'string',
                 format: 'binary',
               },
-              description: 'Optional product media files (max 2)',
+              description: 'Optional product media files (max 3)',
             },
           },
         },
@@ -71,7 +71,7 @@ export class ProductsController {
     },
   })
   @ApiCreatedResponse({ type: ProductResponseDto })
-  @UseInterceptors(FilesInterceptor('files', 2))
+  @UseInterceptors(FilesInterceptor('files', 3))
   @UsePipes(
     new ValidationPipe({
       whitelist: true,
@@ -137,7 +137,7 @@ export class ProductsController {
                 format: 'binary',
               },
               description:
-                'Optional new media files to add (max 2 total per product)',
+                'Optional new media files to add (max 3 total per product)',
             },
           },
         },
@@ -145,7 +145,7 @@ export class ProductsController {
     },
   })
   @ApiOkResponse({ type: ProductResponseDto })
-  @UseInterceptors(FilesInterceptor('files', 2))
+  @UseInterceptors(FilesInterceptor('files', 3))
   @UsePipes(
     new ValidationPipe({
       whitelist: true,
@@ -177,7 +177,7 @@ export class ProductsController {
                 format: 'binary',
               },
               description:
-                'Optional new media files to add (max 2 total per product)',
+                'Optional new media files to add (max 3 total per product)',
             },
           },
         },
@@ -185,7 +185,7 @@ export class ProductsController {
     },
   })
   @ApiOkResponse({ type: ProductResponseDto })
-  @UseInterceptors(FilesInterceptor('files', 2))
+  @UseInterceptors(FilesInterceptor('files', 3))
   @UsePipes(
     new ValidationPipe({
       whitelist: true,

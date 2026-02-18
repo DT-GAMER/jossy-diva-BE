@@ -3,16 +3,20 @@
 import {
   Controller,
   Post,
+  Delete,
   UseGuards,
   UseInterceptors,
   UploadedFile,
   Body,
+  Param,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiCreatedResponse,
+  ApiOkResponse,
+  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -46,5 +50,15 @@ export class MediaController {
       dto.productId,
       file,
     );
+  }
+
+  @Delete(':id')
+  @ApiParam({
+    name: 'id',
+    example: '0b9a1f5e-3d61-466d-a5a4-302712f3bb0e',
+  })
+  @ApiOkResponse({ type: MediaResponseDto })
+  remove(@Param('id') id: string) {
+    return this.mediaService.deleteProductMedia(id);
   }
 }

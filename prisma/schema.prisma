@@ -60,6 +60,7 @@ model ProductMedia {
   productId String
 
   url       String
+  publicId  String
   type      MediaType
 
   createdAt DateTime  @default(now())
