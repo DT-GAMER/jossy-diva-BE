@@ -41,14 +41,14 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AdminOnly } from '../common/decorators/admin-only.decorator';
 
 @ApiTags('Products')
-@ApiBearerAuth('JWT-auth')
 @ApiExtraModels(CreateProductDto, UpdateProductDto)
 @Controller({ path: 'products', version: '1' })
-@UseGuards(JwtAuthGuard)
-@AdminOnly()
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) { }
   @Post()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
+  @AdminOnly()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -88,6 +88,9 @@ export class ProductsController {
 
 
   @Get()
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
+  @AdminOnly()
   @ApiQuery({
     name: 'search',
     required: false,
@@ -116,12 +119,18 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
+  @AdminOnly()
   @ApiOkResponse({ type: ProductResponseDto })
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }
 
   @Put(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
+  @AdminOnly()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -162,6 +171,9 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
+  @AdminOnly()
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -202,6 +214,9 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
+  @AdminOnly()
   @ApiOkResponse({ type: ProductResponseDto })
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
