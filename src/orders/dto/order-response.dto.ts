@@ -11,6 +11,9 @@ export class OrderItemResponseDto {
   @ApiProperty({ example: '0b9a1f5e-3d61-466d-a5a4-302712f3bb0e' })
   productId: string;
 
+  @ApiProperty({ example: 'Classic Sneakers' })
+  productName: string;
+
   @ApiProperty({ example: 2 })
   quantity: number;
 

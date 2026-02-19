@@ -323,27 +323,63 @@ export class OrdersService {
       };
     }
 
-    return this.prisma.order.findMany({
+    const orders = await this.prisma.order.findMany({
       where,
       include: {
-        items: true,
+        items: {
+          include: {
+            product: {
+              select: { name: true },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
+
+    return orders.map((order) => ({
+      ...order,
+      items: order.items.map((item) => ({
+        id: item.id,
+        orderId: item.orderId,
+        productId: item.productId,
+        productName: item.product?.name ?? '',
+        quantity: item.quantity,
+        priceAtOrder: item.priceAtOrder,
+      })),
+    }));
   }
 
   async findByOrderNumber(orderNumber: string) {
     const order = await this.prisma.order.findUnique({
       where: { orderNumber },
-      include: { items: true },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: { name: true },
+            },
+          },
+        },
+      },
     });
 
     if (!order) {
       throw new NotFoundException('Order not found');
     }
 
-    return order;
+    return {
+      ...order,
+      items: order.items.map((item) => ({
+        id: item.id,
+        orderId: item.orderId,
+        productId: item.productId,
+        productName: item.product?.name ?? '',
+        quantity: item.quantity,
+        priceAtOrder: item.priceAtOrder,
+      })),
+    };
   }
 }
