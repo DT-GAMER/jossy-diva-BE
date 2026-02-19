@@ -49,7 +49,7 @@ export class UpdateProductDto {
 
   @ApiPropertyOptional({
     enum: ProductCategory,
-    example: ProductCategory.MEN_SHOES,
+    example: ProductCategory.PERFUMES,
   })
   @IsOptional()
   @Transform(({ value }) => {

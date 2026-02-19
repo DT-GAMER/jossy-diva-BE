@@ -131,15 +131,12 @@ model SaleItem {
 enum ProductCategory {
   MEN_CLOTHINGS
   WOMEN_CLOTHINGS
-  MEN_SHOES
-  WOMEN_SHOES
   PERFUMES
   SKIN_CARES
   WATCHES
   JEWELRIES
   FASHION_GLASSES
   BAGS
-  BODY_SPRAY
 }
 
 enum DiscountType {

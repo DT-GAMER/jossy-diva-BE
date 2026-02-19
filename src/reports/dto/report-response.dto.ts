@@ -36,8 +36,7 @@ export class ReportResponseDto {
       },
     },
     example: {
-      MEN_SHOES: { revenue: 120000, profit: 40000 },
-      PERFUMES: { revenue: 130000, profit: 45000 },
+      PERFUMES: { revenue: 120000, profit: 40000 },
     },
   })
   byCategory: Record<string, ReportSummaryDto>;

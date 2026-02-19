@@ -11,7 +11,7 @@ export class PublicProductResponseDto {
 
   @ApiProperty({
     enum: ProductCategory,
-    example: ProductCategory.MEN_SHOES,
+    example: ProductCategory.PERFUMES,
   })
   category: ProductCategory;
 
