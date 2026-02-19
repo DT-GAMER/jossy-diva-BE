@@ -152,7 +152,6 @@ enum MediaType {
 enum OrderStatus {
   PENDING_PAYMENT
   PAID
-  COMPLETED
   CANCELLED
 }
 

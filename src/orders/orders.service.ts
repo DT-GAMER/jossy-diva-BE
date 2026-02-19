@@ -238,10 +238,10 @@ export class OrdersService {
           );
         });
 
-      // 3️⃣ Mark order completed
+      // 3️⃣ Mark order paid
       return this.prisma.order.update({
         where: { id: orderId },
-        data: { status: OrderStatus.COMPLETED },
+        data: { status: OrderStatus.PAID },
       });
     }
 
