@@ -82,12 +82,18 @@ export class OrdersService {
         throw new NotFoundException('Product not found');
       }
 
-      totalAmount += product.sellingPrice * item.quantity;
+      const effectivePrice = PriceUtil.calculateDiscountedPrice(
+        product.sellingPrice,
+        product.discountType?.toLowerCase() as any,
+        product.discountValue ?? undefined,
+      );
+
+      totalAmount += effectivePrice * item.quantity;
 
       itemsWithPrice.push({
         productId: product.id,
         quantity: item.quantity,
-        priceAtOrder: product.sellingPrice,
+        priceAtOrder: effectivePrice,
       });
     }
 
