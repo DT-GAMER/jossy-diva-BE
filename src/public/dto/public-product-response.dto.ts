@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { DiscountType } from '@prisma/client';
 import { ProductCategory } from '../../common/constants/categories.constant';
 import { ProductMediaResponseDto } from '../../products/dto/product-response.dto';
 
@@ -20,6 +21,30 @@ export class PublicProductResponseDto {
 
   @ApiProperty({ example: 18000 })
   originalPrice: number;
+
+  @ApiPropertyOptional({
+    enum: DiscountType,
+    example: DiscountType.PERCENTAGE,
+  })
+  discountType?: DiscountType | null;
+
+  @ApiPropertyOptional({ example: 10 })
+  discountValue?: number | null;
+
+  @ApiPropertyOptional({ example: '2026-02-20T10:00:00.000Z' })
+  discountStartAt?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-02-21T10:00:00.000Z' })
+  discountEndAt?: Date | null;
+
+  @ApiPropertyOptional({ example: true })
+  discountActive?: boolean;
+
+  @ApiPropertyOptional({ example: '2026-02-21T10:00:00.000Z' })
+  discountEndsAt?: Date | null;
+
+  @ApiPropertyOptional({ example: 86400 })
+  discountRemainingSeconds?: number | null;
 
   @ApiProperty({ type: [ProductMediaResponseDto] })
   media: ProductMediaResponseDto[];

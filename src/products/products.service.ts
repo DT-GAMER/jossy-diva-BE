@@ -46,6 +46,8 @@ export class ProductsService {
   // 🛑 Enforce discount consistency (final safety net)
   const hasDiscountType = dto.discountType !== undefined;
   const hasDiscountValue = dto.discountValue !== undefined;
+  const hasDiscountStart = dto.discountStartAt !== undefined;
+  const hasDiscountEnd = dto.discountEndAt !== undefined;
 
   if (hasDiscountType !== hasDiscountValue) {
     throw new BadRequestException(
@@ -53,19 +55,44 @@ export class ProductsService {
     );
   }
 
-    const product = await this.prisma.product.create({
-      data: {
-        name: dto.name,
-        description: dto.description,
-        category: dto.category,
+  if ((hasDiscountStart || hasDiscountEnd) && !hasDiscountType) {
+    throw new BadRequestException(
+      'discountType and discountValue are required when setting discount dates',
+    );
+  }
+
+  const discountStartAt = hasDiscountStart
+    ? new Date(dto.discountStartAt as string)
+    : undefined;
+  const discountEndAt = hasDiscountEnd
+    ? new Date(dto.discountEndAt as string)
+    : undefined;
+
+  if (
+    discountStartAt &&
+    discountEndAt &&
+    discountStartAt > discountEndAt
+  ) {
+    throw new BadRequestException(
+      'discountStartAt cannot be later than discountEndAt',
+    );
+  }
+
+  const product = await this.prisma.product.create({
+    data: {
+      name: dto.name,
+      description: dto.description,
+      category: dto.category,
       costPrice: dto.costPrice,
       sellingPrice: dto.sellingPrice,
       discountType: dto.discountType, // ✅ trust DTO
       discountValue: dto.discountValue,
+      discountStartAt,
+      discountEndAt,
       quantity: dto.quantity,
       visibleOnWebsite: dto.visibleOnWebsite,
     },
-      include: {
+    include: {
       media: {
         select: {
           id: true,
@@ -79,7 +106,7 @@ export class ProductsService {
   });
 
   if (!validFiles.length) {
-    return product;
+    return this.decorateProductWithDiscount(product);
   }
 
   for (const file of validFiles) {
@@ -89,7 +116,7 @@ export class ProductsService {
     );
   }
 
-  return this.prisma.product.findUnique({
+  const created = await this.prisma.product.findUnique({
     where: { id: product.id },
     include: {
       media: {
@@ -103,6 +130,12 @@ export class ProductsService {
       },
     },
   });
+
+  if (!created) {
+    throw new NotFoundException('Product not found');
+  }
+
+  return this.decorateProductWithDiscount(created);
 }
 
 
@@ -120,7 +153,7 @@ export class ProductsService {
         : {}),
     };
 
-    return this.prisma.product.findMany({
+    const products = await this.prisma.product.findMany({
       where,
       include: {
         media: {
@@ -137,6 +170,10 @@ export class ProductsService {
         createdAt: 'desc',
       },
     });
+
+    return products.map((product) =>
+      this.decorateProductWithDiscount(product),
+    );
   }
 
   getCategories() {
@@ -163,7 +200,7 @@ export class ProductsService {
       throw new NotFoundException('Product not found');
     }
 
-    return product;
+    return this.decorateProductWithDiscount(product);
   }
 
   async update(
@@ -185,6 +222,32 @@ export class ProductsService {
       );
     }
 
+    const hasDiscountStart = updateData.discountStartAt !== undefined;
+    const hasDiscountEnd = updateData.discountEndAt !== undefined;
+
+    if ((hasDiscountStart || hasDiscountEnd) && !updateData.discountType) {
+      throw new BadRequestException(
+        'discountType and discountValue are required when setting discount dates',
+      );
+    }
+
+    const discountStartAt = hasDiscountStart
+      ? new Date(updateData.discountStartAt as string)
+      : undefined;
+    const discountEndAt = hasDiscountEnd
+      ? new Date(updateData.discountEndAt as string)
+      : undefined;
+
+    if (
+      discountStartAt &&
+      discountEndAt &&
+      discountStartAt > discountEndAt
+    ) {
+      throw new BadRequestException(
+        'discountStartAt cannot be later than discountEndAt',
+      );
+    }
+
     await this.prisma.product.update({
       where: { id },
       data: {
@@ -192,6 +255,8 @@ export class ProductsService {
         discountType: updateData.discountType
           ? (updateData.discountType.toUpperCase() as any)
           : undefined,
+        discountStartAt,
+        discountEndAt,
       },
     });
 
@@ -199,7 +264,7 @@ export class ProductsService {
       await this.mediaService.uploadProductMedia(id, file);
     }
 
-    return this.prisma.product.findUnique({
+    const updated = await this.prisma.product.findUnique({
       where: { id },
       include: {
         media: {
@@ -213,6 +278,12 @@ export class ProductsService {
         },
       },
     });
+
+    if (!updated) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.decorateProductWithDiscount(updated);
   }
 
   async remove(id: string) {
@@ -290,12 +361,34 @@ export class ProductsService {
     });
 
     return products.map((product) => ({
-      ...product,
+      ...this.decorateProductWithDiscount(product),
       discountedPrice: PriceUtil.calculateDiscountedPrice(
         product.sellingPrice,
         product.discountType?.toLowerCase() as any,
         product.discountValue ?? undefined,
+        product.discountStartAt,
+        product.discountEndAt,
       ),
     }));
+  }
+
+  private decorateProductWithDiscount<
+    T extends { discountStartAt?: Date | null; discountEndAt?: Date | null }
+  >(product: T): T & {
+    discountActive: boolean;
+    discountEndsAt: Date | null;
+    discountRemainingSeconds: number | null;
+  } {
+    const meta = PriceUtil.getDiscountCountdown(
+      product.discountStartAt,
+      product.discountEndAt,
+    );
+
+    return {
+      ...product,
+      discountActive: meta.active,
+      discountEndsAt: meta.endsAt,
+      discountRemainingSeconds: meta.remainingSeconds,
+    };
   }
 }

@@ -1,5 +1,6 @@
 import {
   IsBoolean,
+  IsDateString,
   IsEnum,
   IsInt,
   IsPositive,
@@ -83,6 +84,44 @@ export class CreateProductDto {
   @IsInt()
   @Min(1)
   discountValue?: number;
+
+  @ApiPropertyOptional({
+    example: '2026-02-20T10:00:00.000Z',
+    description: 'Discount start date/time (optional)',
+  })
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+    return value;
+  })
+  @ValidateIf(
+    (o: CreateProductDto) =>
+      o.discountType !== undefined ||
+      o.discountValue !== undefined ||
+      o.discountEndAt !== undefined,
+  )
+  @IsDateString()
+  discountStartAt?: string;
+
+  @ApiPropertyOptional({
+    example: '2026-02-21T10:00:00.000Z',
+    description: 'Discount end date/time (optional)',
+  })
+  @Transform(({ value }) => {
+    if (value === '' || value === null || value === undefined) {
+      return undefined;
+    }
+    return value;
+  })
+  @ValidateIf(
+    (o: CreateProductDto) =>
+      o.discountType !== undefined ||
+      o.discountValue !== undefined ||
+      o.discountStartAt !== undefined,
+  )
+  @IsDateString()
+  discountEndAt?: string;
 
   /* ---------- INVENTORY ---------- */
 

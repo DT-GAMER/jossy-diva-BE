@@ -37,6 +37,8 @@ model Product {
 
   discountType      DiscountType?
   discountValue     Int?
+  discountStartAt   DateTime?
+  discountEndAt     DateTime?
 
   quantity          Int
   reservedQuantity  Int      @default(0)

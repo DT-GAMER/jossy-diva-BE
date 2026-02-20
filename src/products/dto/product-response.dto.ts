@@ -40,6 +40,21 @@ export class ProductResponseDto {
   @ApiPropertyOptional({ example: 10 })
   discountValue?: number | null;
 
+  @ApiPropertyOptional({ example: '2026-02-20T10:00:00.000Z' })
+  discountStartAt?: Date | null;
+
+  @ApiPropertyOptional({ example: '2026-02-21T10:00:00.000Z' })
+  discountEndAt?: Date | null;
+
+  @ApiPropertyOptional({ example: true })
+  discountActive?: boolean;
+
+  @ApiPropertyOptional({ example: '2026-02-21T10:00:00.000Z' })
+  discountEndsAt?: Date | null;
+
+  @ApiPropertyOptional({ example: 86400 })
+  discountRemainingSeconds?: number | null;
+
   @ApiProperty({ example: 30 })
   quantity: number;
 

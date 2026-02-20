@@ -73,20 +73,41 @@ export class PublicService {
       },
     });
 
-    return products.map((product) => ({
-      id: product.id,
-      name: product.name,
-      category: product.category,
-      price: PriceUtil.calculateDiscountedPrice(
-        product.sellingPrice,
-        product.discountType?.toLowerCase() as any,
-        product.discountValue ?? undefined,
-      ),
-      originalPrice: product.sellingPrice,
-      media: product.media,
-      available: product.quantity - product.reservedQuantity,
-      outOfStock: product.quantity - product.reservedQuantity <= 0,
-    }));
+    return products.map((product) => {
+      const discountMeta = PriceUtil.getDiscountCountdown(
+        product.discountStartAt,
+        product.discountEndAt,
+      );
+
+      const response: Record<string, any> = {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        price: PriceUtil.calculateDiscountedPrice(
+          product.sellingPrice,
+          product.discountType?.toLowerCase() as any,
+          product.discountValue ?? undefined,
+          product.discountStartAt,
+          product.discountEndAt,
+        ),
+        originalPrice: product.sellingPrice,
+        discountStartAt: product.discountStartAt,
+        discountEndAt: product.discountEndAt,
+        discountActive: discountMeta.active,
+        discountEndsAt: discountMeta.endsAt,
+        discountRemainingSeconds: discountMeta.remainingSeconds,
+        media: product.media,
+        available: product.quantity - product.reservedQuantity,
+        outOfStock: product.quantity - product.reservedQuantity <= 0,
+      };
+
+      if (discountMeta.active) {
+        response.discountType = product.discountType;
+        response.discountValue = product.discountValue;
+      }
+
+      return response;
+    });
   }
 
   /**
@@ -116,7 +137,12 @@ export class PublicService {
       throw new NotFoundException('Product not found');
     }
 
-    return {
+    const discountMeta = PriceUtil.getDiscountCountdown(
+      product.discountStartAt,
+      product.discountEndAt,
+    );
+
+    const response: Record<string, any> = {
       id: product.id,
       name: product.name,
       category: product.category,
@@ -124,12 +150,26 @@ export class PublicService {
         product.sellingPrice,
         product.discountType?.toLowerCase() as any,
         product.discountValue ?? undefined,
+        product.discountStartAt,
+        product.discountEndAt,
       ),
       originalPrice: product.sellingPrice,
+      discountStartAt: product.discountStartAt,
+      discountEndAt: product.discountEndAt,
+      discountActive: discountMeta.active,
+      discountEndsAt: discountMeta.endsAt,
+      discountRemainingSeconds: discountMeta.remainingSeconds,
       media: product.media,
       available: product.quantity - product.reservedQuantity,
       outOfStock: product.quantity - product.reservedQuantity <= 0,
     };
+
+    if (discountMeta.active) {
+      response.discountType = product.discountType;
+      response.discountValue = product.discountValue;
+    }
+
+    return response;
   }
 
   /**

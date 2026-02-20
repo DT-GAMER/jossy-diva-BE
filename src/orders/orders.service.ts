@@ -86,6 +86,8 @@ export class OrdersService {
         product.sellingPrice,
         product.discountType?.toLowerCase() as any,
         product.discountValue ?? undefined,
+        product.discountStartAt,
+        product.discountEndAt,
       );
 
       totalAmount += effectivePrice * item.quantity;
